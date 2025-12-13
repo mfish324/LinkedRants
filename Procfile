@@ -1,1 +1,1 @@
-web: bash start.sh
+web: echo "Starting app..." && python manage.py migrate --noinput && echo "Migrations done" && python manage.py collectstatic --noinput && echo "Static done, starting gunicorn on port $PORT" && gunicorn linkedrants.wsgi:application --bind 0.0.0.0:$PORT --log-level debug --access-logfile - --error-logfile -
