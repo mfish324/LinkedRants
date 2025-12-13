@@ -1,0 +1,48 @@
+<article class="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">{{ rant.category.icon }}</span>
+            <div>
+                <a href="{% url 'rants:category' slug=rant.category.slug %}"
+                   class="text-sm text-primary-400 hover:text-primary-300">
+                    {{ rant.category.name }}
+                </a>
+                <div class="text-xs text-gray-500">
+                    {{ rant.created_at|timesince }} ago
+                    {% if not rant.is_anonymous %} by {{ rant.author_display }}{% endif %}
+                </div>
+            </div>
+        </div>
+        {% if rant.is_featured %}
+        <span class="bg-accent-500/20 text-accent-400 text-xs px-2 py-1 rounded-full">
+            Featured
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Title -->
+    {% if rant.title %}
+    <h2 class="text-xl font-semibold mb-3">
+        <a href="{{ rant.get_absolute_url }}" class="hover:text-primary-400 transition">
+            {{ rant.title }}
+        </a>
+    </h2>
+    {% endif %}
+
+    <!-- Body preview -->
+    <div class="prose text-gray-300 mb-4">
+        <a href="{{ rant.get_absolute_url }}" class="hover:text-gray-100 transition">
+            {{ rant.body|truncatewords:50 }}
+        </a>
+    </div>
+
+    <!-- Reactions -->
+    <div id="reactions-rant-{{ rant.pk }}" class="flex items-center justify-between">
+        {% include 'rants/partials/reaction_buttons.html' with content=rant content_type='rant' reaction_counts=rant.get_reaction_counts %}
+
+        <a href="{{ rant.get_absolute_url }}" class="text-sm text-gray-500 hover:text-gray-300 transition">
+            View full rant &#x2192;
+        </a>
+    </div>
+</article>

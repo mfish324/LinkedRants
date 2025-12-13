@@ -1,0 +1,17 @@
+<div class="flex flex-wrap items-center gap-2">
+    {% for code, emoji in reaction_types %}
+    {% with count=reaction_counts|default:"{}"|dictsort:code %}
+    <button
+        hx-post="{% url 'rants:react' content_type=content_type pk=content.pk reaction_type=code %}"
+        hx-target="#reactions-{{ content_type }}-{{ content.pk }}"
+        hx-swap="innerHTML"
+        class="reaction-btn flex items-center space-x-1 px-3 py-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-sm transition {% if code in user_reactions %}active ring-2 ring-primary-500{% endif %}"
+        title="{{ code }}">
+        <span>{{ emoji }}</span>
+        {% if reaction_counts %}
+        <span class="text-gray-400">{{ reaction_counts|default_if_none:0 }}</span>
+        {% endif %}
+    </button>
+    {% endwith %}
+    {% endfor %}
+</div>

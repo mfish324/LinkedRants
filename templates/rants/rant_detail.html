@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ rant.title|default:"Rant" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Back link -->
+    <a href="{% url 'rants:home' %}" class="text-gray-400 hover:text-gray-200 mb-6 inline-block">
+        &#x2190; Back to feed
+    </a>
+
+    <article class="bg-gray-800 rounded-lg p-8">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">{{ rant.category.icon }}</span>
+                <div>
+                    <a href="{% url 'rants:category' slug=rant.category.slug %}"
+                       class="text-primary-400 hover:text-primary-300 font-medium">
+                        {{ rant.category.name }}
+                    </a>
+                    <div class="text-sm text-gray-500">
+                        {{ rant.created_at|date:"F j, Y, g:i a" }}
+                        {% if not rant.is_anonymous %} by {{ rant.author_display }}{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% if rant.is_featured %}
+            <span class="bg-accent-500/20 text-accent-400 text-sm px-3 py-1 rounded-full">
+                Featured
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Title -->
+        {% if rant.title %}
+        <h1 class="text-2xl md:text-3xl font-bold mb-6">{{ rant.title }}</h1>
+        {% endif %}
+
+        <!-- Body -->
+        <div class="prose text-gray-300 text-lg leading-relaxed mb-8">
+            {{ rant.body_html|safe }}
+        </div>
+
+        <!-- Reactions -->
+        <div id="reactions-rant-{{ rant.pk }}" class="border-t border-gray-700 pt-6">
+            <h3 class="text-sm text-gray-400 mb-3">React to this rant:</h3>
+            <div class="flex flex-wrap items-center gap-3">
+                {% for code, emoji in reaction_types %}
+                <button
+                    hx-post="{% url 'rants:react' content_type='rant' pk=rant.pk reaction_type=code %}"
+                    hx-target="#reactions-rant-{{ rant.pk }}"
+                    hx-swap="outerHTML"
+                    class="reaction-btn flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition {% if code in user_reactions %}active ring-2 ring-primary-500{% endif %}"
+                    title="{{ reaction_labels|default:code }}">
+                    <span class="text-xl">{{ emoji }}</span>
+                    <span class="text-gray-300">{{ reaction_labels|default:code }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
+            <!-- Share -->
+            <div class="flex items-center space-x-4">
+                <button onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Copied!';"
+                        class="text-gray-400 hover:text-gray-200 text-sm">
+                    Copy link
+                </button>
+            </div>
+
+            <!-- Report -->
+            <button
+                hx-post="{% url 'rants:report' content_type='rant' pk=rant.pk %}"
+                hx-swap="outerHTML"
+                class="text-gray-500 hover:text-red-400 text-sm transition">
+                Report
+            </button>
+        </div>
+    </article>
+</div>
+{% endblock %}

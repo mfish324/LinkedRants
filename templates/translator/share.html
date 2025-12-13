@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ mode_display }} Translation{% endblock %}
+
+{% block meta_description %}Check out this LinkedIn translation on LinkedRants - the anti-LinkedIn.{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <a href="{% url 'translator:translate' %}" class="text-primary-400 hover:text-primary-300 mb-4 inline-block">
+            &#x2190; Back to translator
+        </a>
+        <h1 class="text-3xl font-bold">{{ mode_display }}</h1>
+        <p class="text-gray-500 text-sm mt-2">
+            Translated {{ translation.created_at|timesince }} ago
+            &#x2022; {{ translation.view_count }} view{{ translation.view_count|pluralize }}
+        </p>
+    </div>
+
+    <!-- Translation display -->
+    <div class="bg-gray-800 rounded-lg p-8">
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Original -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">
+                    {% if translation.mode == 'to_linkedin' %}The honest thought:{% else %}The LinkedIn post:{% endif %}
+                </h3>
+                <div class="bg-gray-900 rounded-lg p-4 text-gray-300 whitespace-pre-wrap">{{ translation.original_text }}</div>
+            </div>
+
+            <!-- Translated -->
+            <div>
+                <h3 class="text-sm font-medium text-primary-400 mb-3">
+                    {% if translation.mode == 'to_linkedin' %}The LinkedIn version:{% else %}What they actually meant:{% endif %}
+                </h3>
+                <div class="bg-primary-900/20 border border-primary-800 rounded-lg p-4 text-gray-300 whitespace-pre-wrap">{{ translation.translated_text }}</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-center space-x-4 mt-8 pt-6 border-t border-gray-700">
+            <button onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Link Copied!';"
+                    class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                Copy Share Link
+            </button>
+            <a href="{% url 'translator:translate' %}"
+               class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition">
+                Try Your Own
+            </a>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-12">
+        <p class="text-gray-400 mb-4">Want to vent about LinkedIn culture?</p>
+        <a href="{% url 'rants:create' %}"
+           class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-lg font-semibold transition inline-block">
+            Submit a Rant
+        </a>
+    </div>
+</div>
+{% endblock %}

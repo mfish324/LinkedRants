@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ sidebyside.context|default:"LinkedIn vs Reality" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Back link -->
+    <a href="{% url 'rants:home' %}" class="text-gray-400 hover:text-gray-200 mb-6 inline-block">
+        &#x2190; Back to feed
+    </a>
+
+    <article class="bg-gray-800 rounded-lg p-8">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold mb-2">
+                    {% if sidebyside.context %}{{ sidebyside.context }}{% else %}LinkedIn vs Reality{% endif %}
+                </h1>
+                <div class="text-sm text-gray-500">
+                    {{ sidebyside.created_at|date:"F j, Y" }}
+                    {% if not sidebyside.is_anonymous %} by {{ sidebyside.author_display }}{% endif %}
+                </div>
+            </div>
+            {% if sidebyside.is_featured %}
+            <span class="bg-accent-500/20 text-accent-400 text-sm px-3 py-1 rounded-full">
+                Featured
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Side by side comparison -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- LinkedIn Version -->
+            <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-blue-300 mb-4 flex items-center space-x-2">
+                    <span>The LinkedIn Version</span>
+                </h2>
+                <div class="text-gray-300 whitespace-pre-wrap">{{ sidebyside.linkedin_version }}</div>
+            </div>
+
+            <!-- Reality Version -->
+            <div class="bg-primary-900/20 border border-primary-800 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-primary-300 mb-4 flex items-center space-x-2">
+                    <span>The Reality</span>
+                </h2>
+                <div class="text-gray-300 whitespace-pre-wrap">{{ sidebyside.reality_version }}</div>
+            </div>
+        </div>
+
+        <!-- Reactions -->
+        <div id="reactions-sidebyside-{{ sidebyside.pk }}" class="border-t border-gray-700 pt-6">
+            <h3 class="text-sm text-gray-400 mb-3">React:</h3>
+            <div class="flex flex-wrap items-center gap-3">
+                {% for code, emoji in reaction_types %}
+                <button
+                    hx-post="{% url 'rants:react' content_type='sidebyside' pk=sidebyside.pk reaction_type=code %}"
+                    hx-target="#reactions-sidebyside-{{ sidebyside.pk }}"
+                    hx-swap="outerHTML"
+                    class="reaction-btn flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition {% if code in user_reactions %}active ring-2 ring-primary-500{% endif %}"
+                    title="{{ reaction_labels|default:code }}">
+                    <span class="text-xl">{{ emoji }}</span>
+                    <span class="text-gray-300">{{ reaction_labels|default:code }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
+            <button onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Copied!';"
+                    class="text-gray-400 hover:text-gray-200 text-sm">
+                Copy link
+            </button>
+            <button
+                hx-post="{% url 'rants:report' content_type='sidebyside' pk=sidebyside.pk %}"
+                hx-swap="outerHTML"
+                class="text-gray-500 hover:text-red-400 text-sm transition">
+                Report
+            </button>
+        </div>
+    </article>
+</div>
+{% endblock %}

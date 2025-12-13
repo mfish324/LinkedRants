@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center space-x-3 mb-2">
+            <span class="text-4xl">{{ category.icon }}</span>
+            <h1 class="text-3xl font-bold">{{ category.name }}</h1>
+        </div>
+        <p class="text-gray-400">{{ category.description }}</p>
+    </div>
+
+    <!-- Rants -->
+    {% if rants %}
+    <div class="space-y-6">
+        {% for rant in rants %}
+        {% include 'rants/partials/rant_card.html' with rant=rant %}
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8 space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+           class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+            Previous
+        </a>
+        {% endif %}
+
+        <span class="px-4 py-2 text-gray-400">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+           class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+            Next
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-12 bg-gray-800 rounded-lg">
+        <p class="text-gray-400 text-lg mb-4">No rants in this category yet.</p>
+        <a href="{% url 'rants:create' %}" class="text-primary-400 hover:text-primary-300">
+            Be the first to post &#x2192;
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

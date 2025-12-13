@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit a Side-by-Side{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2">{{ form_title }}</h1>
+    <p class="text-gray-400 mb-8">Show the contrast between LinkedIn performance and reality.</p>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Context -->
+        <div>
+            <label for="id_context" class="block text-sm font-medium text-gray-300 mb-2">
+                Context (optional)
+            </label>
+            {{ form.context }}
+            <p class="text-gray-500 text-sm mt-1">Brief setup, e.g., "After getting laid off"</p>
+        </div>
+
+        <!-- Side by side inputs -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- LinkedIn Version -->
+            <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+                <label for="id_linkedin_version" class="block text-sm font-medium text-blue-300 mb-2">
+                    The LinkedIn Version <span class="text-red-400">*</span>
+                </label>
+                {{ form.linkedin_version }}
+                <p class="text-gray-500 text-sm mt-1">What you posted (or would post)</p>
+                {% if form.linkedin_version.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.linkedin_version.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Reality Version -->
+            <div class="bg-primary-900/20 border border-primary-800 rounded-lg p-4">
+                <label for="id_reality_version" class="block text-sm font-medium text-primary-300 mb-2">
+                    The Reality <span class="text-red-400">*</span>
+                </label>
+                {{ form.reality_version }}
+                <p class="text-gray-500 text-sm mt-1">What actually happened</p>
+                {% if form.reality_version.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.reality_version.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Anonymous toggle -->
+        <div class="bg-gray-800 rounded-lg p-4">
+            <label class="flex items-center space-x-3 cursor-pointer">
+                {{ form.is_anonymous }}
+                <span class="text-gray-300">Post anonymously</span>
+            </label>
+        </div>
+
+        <!-- Display name -->
+        <div>
+            <label for="id_display_name" class="block text-sm font-medium text-gray-300 mb-2">
+                Display Name
+            </label>
+            {{ form.display_name }}
+        </div>
+
+        <!-- Email -->
+        <div>
+            <label for="id_email" class="block text-sm font-medium text-gray-300 mb-2">
+                Email (optional)
+            </label>
+            {{ form.email }}
+        </div>
+
+        <!-- Submit -->
+        <div class="flex items-center justify-between pt-4">
+            <a href="{% url 'rants:home' %}" class="text-gray-400 hover:text-gray-200">
+                Cancel
+            </a>
+            <button type="submit"
+                    class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                Post Side-by-Side
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}LinkedIn Translator{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-4">
+            <span class="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+                The LinkedIn Translator
+            </span>
+        </h1>
+        <p class="text-xl text-gray-400 mb-2">Transform between honest thoughts and LinkedIn-speak.</p>
+    </div>
+
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Mode selector -->
+    <div class="flex justify-center mb-6">
+        <div class="inline-flex bg-gray-800 rounded-lg p-1" id="mode-selector">
+            <button type="button"
+                    onclick="setMode('to_linkedin')"
+                    id="btn-to-linkedin"
+                    class="px-6 py-3 rounded-lg transition font-medium bg-primary-600 text-white">
+                Make it LinkedIn
+            </button>
+            <button type="button"
+                    onclick="setMode('to_reality')"
+                    id="btn-to-reality"
+                    class="px-6 py-3 rounded-lg transition font-medium text-gray-400 hover:text-white">
+                Make it Real
+            </button>
+        </div>
+    </div>
+
+    <!-- Translator form - side by side -->
+    <form method="post" id="translator-form">
+        {% csrf_token %}
+        <input type="hidden" name="mode" id="mode-input" value="to_linkedin">
+
+        <div class="flex items-stretch gap-4">
+            <!-- Left side: Input -->
+            <div class="flex-1">
+                <label id="input-label" class="block text-sm font-medium text-gray-400 mb-2">
+                    Your honest thought:
+                </label>
+                <textarea name="text"
+                          id="input-text"
+                          rows="10"
+                          class="form-textarea text-lg h-64 resize-none"
+                          placeholder="Write what you actually want to say..."
+                          required>{{ original_text|default:'' }}</textarea>
+            </div>
+
+            <!-- Middle: Translate button -->
+            <div class="flex items-center">
+                <button type="submit"
+                        class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-4 rounded-lg font-semibold transition flex flex-col items-center gap-2">
+                    <span class="text-2xl">&#x2192;</span>
+                    <span>Translate</span>
+                </button>
+            </div>
+
+            <!-- Right side: Output -->
+            <div class="flex-1">
+                <label id="output-label" class="block text-sm font-medium text-primary-400 mb-2">
+                    The LinkedIn version:
+                </label>
+                <div id="output-text"
+                     class="form-textarea h-64 overflow-y-auto whitespace-pre-wrap {% if translated_text and 'Translation failed' not in translated_text %}bg-primary-900/20 border-primary-800{% endif %}">{% if translated_text %}{{ translated_text }}{% else %}<span class="text-gray-500 italic">Translation will appear here...</span>{% endif %}</div>
+            </div>
+        </div>
+
+        {% if translation and 'Translation failed' not in translated_text %}
+        <!-- Share link -->
+        <div class="flex items-center justify-center gap-4 mt-6">
+            <button type="button"
+                    onclick="navigator.clipboard.writeText(document.getElementById('output-text').textContent); this.textContent='Copied!';"
+                    class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                Copy Translation
+            </button>
+            <a href="{{ translation.get_absolute_url }}"
+               class="text-primary-400 hover:text-primary-300">
+                Share this translation &#x2192;
+            </a>
+        </div>
+        {% endif %}
+    </form>
+
+    <!-- Examples -->
+    <div class="mt-10 text-center">
+        <h3 class="text-sm font-medium text-gray-500 mb-3">Try an example:</h3>
+        <div class="flex flex-wrap justify-center gap-2">
+            <button type="button"
+                    onclick="document.getElementById('input-text').value = 'I got laid off today. I am stressed about paying rent and scared about the future.';"
+                    class="text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">
+                "I got laid off..."
+            </button>
+            <button type="button"
+                    onclick="document.getElementById('input-text').value = 'My boss takes credit for all my work and I am sick of it.';"
+                    class="text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">
+                "My boss takes credit..."
+            </button>
+            <button type="button"
+                    onclick="document.getElementById('input-text').value = 'I hate networking events. They are awkward and fake.';"
+                    class="text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full transition">
+                "I hate networking..."
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function setMode(mode) {
+    document.getElementById('mode-input').value = mode;
+
+    const btnLinkedin = document.getElementById('btn-to-linkedin');
+    const btnReality = document.getElementById('btn-to-reality');
+    const inputLabel = document.getElementById('input-label');
+    const outputLabel = document.getElementById('output-label');
+    const inputText = document.getElementById('input-text');
+
+    if (mode === 'to_linkedin') {
+        btnLinkedin.className = 'px-6 py-3 rounded-lg transition font-medium bg-primary-600 text-white';
+        btnReality.className = 'px-6 py-3 rounded-lg transition font-medium text-gray-400 hover:text-white';
+        inputLabel.textContent = 'Your honest thought:';
+        outputLabel.textContent = 'The LinkedIn version:';
+        inputText.placeholder = 'Write what you actually want to say...';
+    } else {
+        btnReality.className = 'px-6 py-3 rounded-lg transition font-medium bg-primary-600 text-white';
+        btnLinkedin.className = 'px-6 py-3 rounded-lg transition font-medium text-gray-400 hover:text-white';
+        inputLabel.textContent = 'The LinkedIn post:';
+        outputLabel.textContent = 'What they actually meant:';
+        inputText.placeholder = 'Paste that cringey LinkedIn post here...';
+    }
+}
+
+// Set initial mode from server if provided
+{% if mode == 'to_reality' %}
+setMode('to_reality');
+{% endif %}
+</script>
+{% endblock %}

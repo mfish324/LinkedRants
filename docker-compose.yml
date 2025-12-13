@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgres://linkedrants:linkedrants@db:5432/linkedrants
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/app/staticfiles
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 linkedrants.wsgi:application"
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=linkedrants
+      - POSTGRES_USER=linkedrants
+      - POSTGRES_PASSWORD=linkedrants
+
+volumes:
+  postgres_data:
+  static_volume:

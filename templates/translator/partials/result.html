@@ -1,0 +1,35 @@
+<div id="translation-result" class="bg-gray-800 rounded-lg p-8">
+    <h2 class="text-xl font-semibold mb-6 text-center">{{ mode_display }}</h2>
+
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Original -->
+        <div>
+            <h3 class="text-sm font-medium text-gray-400 mb-3">
+                {% if mode == 'to_linkedin' %}Your honest thought:{% else %}The LinkedIn post:{% endif %}
+            </h3>
+            <div class="bg-gray-900 rounded-lg p-4 text-gray-300 whitespace-pre-wrap">{{ original_text }}</div>
+        </div>
+
+        <!-- Translated -->
+        <div>
+            <h3 class="text-sm font-medium text-primary-400 mb-3">
+                {% if mode == 'to_linkedin' %}The LinkedIn version:{% else %}What they actually meant:{% endif %}
+            </h3>
+            <div id="translated-text" class="bg-primary-900/20 border border-primary-800 rounded-lg p-4 text-gray-300 whitespace-pre-wrap">{{ translated_text }}</div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-center space-x-4 mt-8 pt-6 border-t border-gray-700">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('translated-text').textContent); this.textContent='Copied!';"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+            Copy Translation
+        </button>
+        {% if translation %}
+        <a href="{{ translation.get_absolute_url }}"
+           class="text-primary-400 hover:text-primary-300">
+            Share this translation &#x2192;
+        </a>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero section -->
+<section class="text-center mb-12">
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        <span class="bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+            Say what you actually think.
+        </span>
+    </h1>
+    <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+        The antidote to LinkedIn's performative professional culture.
+        No personal branding required.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4">
+        <a href="{% url 'translator:translate' %}"
+           class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center space-x-2">
+            <span>Try the LinkedIn Translator</span>
+            <span>&#x2192;</span>
+        </a>
+        <a href="{% url 'rants:create' %}"
+           class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+            Submit a Rant
+        </a>
+        <a href="{% url 'rants:sidebyside_create' %}"
+           class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+            Submit Side-by-Side
+        </a>
+    </div>
+</section>
+
+<div class="flex flex-col lg:flex-row gap-8">
+    <!-- Main feed -->
+    <div class="flex-1">
+        <!-- Filters and sorting -->
+        <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-400">Filter:</span>
+                <a href="{% url 'rants:home' %}?sort={{ current_sort }}"
+                   class="px-3 py-1 rounded-full text-sm {% if not current_category %}bg-primary-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %} transition">
+                    All
+                </a>
+                {% for category in categories %}
+                <a href="{% url 'rants:home' %}?category={{ category.slug }}&sort={{ current_sort }}"
+                   class="px-3 py-1 rounded-full text-sm {% if current_category == category.slug %}bg-primary-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %} transition">
+                    {{ category.icon }} {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-400 text-sm">Sort:</span>
+                <a href="{% url 'rants:home' %}?{% if current_category %}category={{ current_category }}&{% endif %}sort=recent"
+                   class="px-3 py-1 rounded text-sm {% if current_sort == 'recent' %}text-primary-400{% else %}text-gray-400 hover:text-gray-200{% endif %}">
+                    Recent
+                </a>
+                <a href="{% url 'rants:home' %}?{% if current_category %}category={{ current_category }}&{% endif %}sort=reactions"
+                   class="px-3 py-1 rounded text-sm {% if current_sort == 'reactions' %}text-primary-400{% else %}text-gray-400 hover:text-gray-200{% endif %}">
+                    Most Reacted
+                </a>
+            </div>
+        </div>
+
+        <!-- Rants list -->
+        {% if rants %}
+        <div class="space-y-6">
+            {% for rant in rants %}
+            {% include 'rants/partials/rant_card.html' with rant=rant %}
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="flex justify-center mt-8 space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?{% if current_category %}category={{ current_category }}&{% endif %}sort={{ current_sort }}&page={{ page_obj.previous_page_number }}"
+               class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+                Previous
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 text-gray-400">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?{% if current_category %}category={{ current_category }}&{% endif %}sort={{ current_sort }}&page={{ page_obj.next_page_number }}"
+               class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+                Next
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-12">
+            <p class="text-gray-400 text-lg mb-4">No rants yet. Be the first to vent!</p>
+            <a href="{% url 'rants:create' %}" class="text-primary-400 hover:text-primary-300">
+                Submit a rant &#x2192;
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="lg:w-80">
+        <!-- What we DON'T do -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="font-semibold text-lg mb-4 text-primary-400">What We Don't Do</h3>
+            <ul class="space-y-2 text-gray-400 text-sm">
+                <li class="flex items-center space-x-2">
+                    <span class="text-red-400">&#x2717;</span>
+                    <span>No user profiles to optimize</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                    <span class="text-red-400">&#x2717;</span>
+                    <span>No follower counts</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                    <span class="text-red-400">&#x2717;</span>
+                    <span>No engagement algorithms</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                    <span class="text-red-400">&#x2717;</span>
+                    <span>No "connection" requests</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                    <span class="text-red-400">&#x2717;</span>
+                    <span>No endorsements</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Categories -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="font-semibold text-lg mb-4">Categories</h3>
+            <ul class="space-y-2">
+                {% for category in categories %}
+                <li>
+                    <a href="{% url 'rants:category' slug=category.slug %}"
+                       class="flex items-center space-x-2 text-gray-300 hover:text-primary-400 transition">
+                        <span>{{ category.icon }}</span>
+                        <span>{{ category.name }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Recent Side-by-Sides -->
+        {% if sidebysides %}
+        <div class="bg-gray-800 rounded-lg p-6">
+            <h3 class="font-semibold text-lg mb-4">Recent Comparisons</h3>
+            <div class="space-y-4">
+                {% for sbs in sidebysides %}
+                <a href="{{ sbs.get_absolute_url }}" class="block hover:bg-gray-700 rounded p-2 -mx-2 transition">
+                    <p class="text-sm text-gray-400 truncate">{{ sbs.context|default:"LinkedIn vs Reality" }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LinkedRants{% endblock %} | The Anti-LinkedIn</title>
+    <meta name="description" content="{% block meta_description %}Say what you actually think. No personal branding required.{% endblock %}">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                        },
+                        accent: {
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Custom styles -->
+    <style>
+        .prose { max-width: 65ch; }
+        .prose p { margin-bottom: 1em; }
+        .prose ul, .prose ol { margin-left: 1.5em; margin-bottom: 1em; }
+        .prose li { margin-bottom: 0.25em; }
+        .prose blockquote {
+            border-left: 3px solid #7c3aed;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #9ca3af;
+        }
+        .prose code {
+            background: #1f2937;
+            padding: 0.125em 0.25em;
+            border-radius: 0.25em;
+            font-size: 0.875em;
+        }
+        .prose pre {
+            background: #1f2937;
+            padding: 1em;
+            border-radius: 0.5em;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+        .prose pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Form styles */
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            color: #f3f4f6;
+            transition: border-color 0.15s ease;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        .form-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: #7c3aed;
+        }
+
+        /* Reaction button animation */
+        .reaction-btn {
+            transition: transform 0.1s ease, background-color 0.15s ease;
+        }
+        .reaction-btn:hover {
+            transform: scale(1.1);
+        }
+        .reaction-btn:active {
+            transform: scale(0.95);
+        }
+        .reaction-btn.active {
+            background-color: rgba(124, 58, 237, 0.3);
+        }
+
+        /* HTMX loading indicator */
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-gray-800 sticky top-0 bg-gray-900/95 backdrop-blur z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="{% url 'rants:home' %}" class="flex items-center space-x-2">
+                    <span class="text-2xl font-bold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+                        LinkedRants
+                    </span>
+                </a>
+
+                <!-- Nav links -->
+                <div class="flex items-center space-x-6">
+                    <a href="{% url 'translator:translate' %}"
+                       class="text-gray-300 hover:text-primary-400 transition font-medium">
+                        Translator
+                    </a>
+                    <a href="{% url 'rants:hall_of_fame' %}"
+                       class="text-gray-300 hover:text-primary-400 transition font-medium">
+                        Hall of Fame
+                    </a>
+                    <a href="{% url 'rants:create' %}"
+                       class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                        Submit Rant
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Flash messages -->
+    {% if messages %}
+    <div class="container mx-auto px-4 mt-4">
+        {% for message in messages %}
+        <div class="bg-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-900/50 border border-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-700 text-{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}blue{% endif %}-200 px-4 py-3 rounded-lg mb-4">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-16 py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between text-gray-500 text-sm">
+                <div class="mb-4 md:mb-0">
+                    <span class="font-semibold text-gray-400">LinkedRants</span> - The Anti-LinkedIn
+                </div>
+                <div class="flex items-center space-x-6">
+                    <span>No tracking</span>
+                    <span>No algorithms</span>
+                    <span>No personal branding</span>
+                </div>
+            </div>
+            <div class="text-center mt-4 text-gray-600 text-xs">
+                Made with frustration
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

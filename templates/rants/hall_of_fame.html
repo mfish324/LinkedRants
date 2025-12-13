@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Hall of Fame{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold mb-4">
+            <span class="bg-gradient-to-r from-accent-400 to-primary-400 bg-clip-text text-transparent">
+                Hall of Fame
+            </span>
+        </h1>
+        <p class="text-xl text-gray-400">The most reacted-to rants of all time.</p>
+    </div>
+
+    <!-- Top rants -->
+    {% if rants %}
+    <div class="space-y-6">
+        {% for rant in rants %}
+        <div class="relative">
+            <!-- Rank badge -->
+            {% if forloop.counter <= 3 %}
+            <div class="absolute -left-4 -top-4 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                {% if forloop.counter == 1 %}bg-yellow-500 text-yellow-900
+                {% elif forloop.counter == 2 %}bg-gray-300 text-gray-700
+                {% else %}bg-orange-600 text-orange-100{% endif %}">
+                {{ forloop.counter }}
+            </div>
+            {% endif %}
+
+            {% include 'rants/partials/rant_card.html' with rant=rant %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8 space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+           class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+            Previous
+        </a>
+        {% endif %}
+
+        <span class="px-4 py-2 text-gray-400">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+           class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+            Next
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-12 bg-gray-800 rounded-lg">
+        <p class="text-gray-400 text-lg mb-4">No rants have been reacted to yet.</p>
+        <a href="{% url 'rants:home' %}" class="text-primary-400 hover:text-primary-300">
+            Browse rants and react &#x2192;
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
