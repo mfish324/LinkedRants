@@ -16,6 +16,11 @@ urlpatterns = [
     path('sidebyside/<uuid:pk>/', views.SideBySideDetailView.as_view(), name='sidebyside_detail'),
     path('submit/sidebyside/', views.SideBySideCreateView.as_view(), name='sidebyside_create'),
 
+    # Wall of Shame (ghosting stories)
+    path('wall-of-shame/', views.WallOfShameView.as_view(), name='wall_of_shame'),
+    path('wall-of-shame/<uuid:pk>/', views.GhostingStoryDetailView.as_view(), name='ghosting_detail'),
+    path('submit/ghosting/', views.GhostingStoryCreateView.as_view(), name='ghosting_create'),
+
     # Category view
     path('category/<slug:slug>/', views.CategoryView.as_view(), name='category'),
 

@@ -6,8 +6,8 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.urls import reverse_lazy
 
-from .models import Category, Rant, SideBySide, Reaction
-from .forms import RantForm, SideBySideForm, ReportForm
+from .models import Category, Rant, SideBySide, GhostingStory, Reaction
+from .forms import RantForm, SideBySideForm, GhostingStoryForm, ReportForm
 
 
 class HomeView(ListView):
@@ -189,6 +189,13 @@ class ReactView(View):
                 session_key=session_key,
                 reaction_type=reaction_type
             ).first()
+        elif content_type == 'ghosting':
+            content = get_object_or_404(GhostingStory, pk=pk, is_approved=True)
+            existing = Reaction.objects.filter(
+                ghosting_story=content,
+                session_key=session_key,
+                reaction_type=reaction_type
+            ).first()
         else:
             return HttpResponse(status=400)
 
@@ -203,9 +210,15 @@ class ReactView(View):
                     session_key=session_key,
                     reaction_type=reaction_type
                 )
-            else:
+            elif content_type == 'sidebyside':
                 Reaction.objects.create(
                     sidebyside=content,
+                    session_key=session_key,
+                    reaction_type=reaction_type
+                )
+            else:  # ghosting
+                Reaction.objects.create(
+                    ghosting_story=content,
                     session_key=session_key,
                     reaction_type=reaction_type
                 )
@@ -239,6 +252,8 @@ class ReportView(View):
             content = get_object_or_404(Rant, pk=pk)
         elif content_type == 'sidebyside':
             content = get_object_or_404(SideBySide, pk=pk)
+        elif content_type == 'ghosting':
+            content = get_object_or_404(GhostingStory, pk=pk)
         else:
             return HttpResponse(status=400)
 
@@ -270,3 +285,85 @@ class HallOfFameView(ListView):
         context['reaction_types'] = Reaction.REACTION_TYPES
         context['reaction_labels'] = Reaction.REACTION_LABELS
         return context
+
+
+class WallOfShameView(ListView):
+    """Wall of Shame - ghosting recruiters."""
+    model = GhostingStory
+    template_name = 'rants/wall_of_shame.html'
+    context_object_name = 'stories'
+    paginate_by = 15
+
+    def get_queryset(self):
+        queryset = GhostingStory.objects.filter(is_approved=True)
+
+        # Filter by company
+        company = self.request.GET.get('company')
+        if company:
+            queryset = queryset.filter(company__icontains=company)
+
+        # Filter by stage
+        stage = self.request.GET.get('stage')
+        if stage:
+            queryset = queryset.filter(stage=stage)
+
+        # Sorting
+        sort = self.request.GET.get('sort', 'recent')
+        if sort == 'reactions':
+            queryset = queryset.annotate(
+                reaction_count=Count('reactions')
+            ).order_by('-reaction_count', '-created_at')
+        elif sort == 'featured':
+            queryset = queryset.filter(is_featured=True).order_by('-created_at')
+        else:  # recent
+            queryset = queryset.order_by('-created_at')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['stage_choices'] = GhostingStory.STAGE_CHOICES
+        context['current_stage'] = self.request.GET.get('stage', '')
+        context['current_sort'] = self.request.GET.get('sort', 'recent')
+        context['current_company'] = self.request.GET.get('company', '')
+        context['reaction_types'] = Reaction.REACTION_TYPES
+        context['reaction_labels'] = Reaction.REACTION_LABELS
+        return context
+
+
+class GhostingStoryDetailView(DetailView):
+    """Detail view for a ghosting story."""
+    model = GhostingStory
+    template_name = 'rants/ghosting_detail.html'
+    context_object_name = 'story'
+
+    def get_queryset(self):
+        return GhostingStory.objects.filter(is_approved=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['reaction_types'] = Reaction.REACTION_TYPES
+        context['reaction_labels'] = Reaction.REACTION_LABELS
+        session_key = self.request.session.session_key
+        if session_key:
+            context['user_reactions'] = list(
+                Reaction.objects.filter(
+                    ghosting_story=self.object,
+                    session_key=session_key
+                ).values_list('reaction_type', flat=True)
+            )
+        else:
+            context['user_reactions'] = []
+        return context
+
+
+class GhostingStoryCreateView(CreateView):
+    """Submit a ghosting story to the Wall of Shame."""
+    model = GhostingStory
+    form_class = GhostingStoryForm
+    template_name = 'rants/ghosting_form.html'
+    success_url = reverse_lazy('rants:wall_of_shame')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your story has been added to the Wall of Shame!')
+        return super().form_valid(form)

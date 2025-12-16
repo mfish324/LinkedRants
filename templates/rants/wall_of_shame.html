@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Wall of Shame{% endblock %}
+
+{% block content %}
+<!-- Hero section -->
+<section class="text-center mb-12">
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        <span class="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
+            Wall of Shame
+        </span>
+    </h1>
+    <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+        Recruiters who ghosted. Companies that went silent. The hiring process exposed.
+    </p>
+    <a href="{% url 'rants:ghosting_create' %}"
+       class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition inline-flex items-center space-x-2">
+        <span>Add to the Wall</span>
+        <span>&#x2192;</span>
+    </a>
+</section>
+
+<!-- Filters -->
+<div class="flex flex-wrap items-center justify-between mb-8 gap-4">
+    <div class="flex items-center space-x-4 flex-wrap gap-2">
+        <span class="text-gray-400">Stage:</span>
+        <a href="{% url 'rants:wall_of_shame' %}?sort={{ current_sort }}{% if current_company %}&company={{ current_company }}{% endif %}"
+           class="px-3 py-1 rounded-full text-sm {% if not current_stage %}bg-red-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %} transition">
+            All
+        </a>
+        {% for code, label in stage_choices %}
+        <a href="{% url 'rants:wall_of_shame' %}?stage={{ code }}&sort={{ current_sort }}{% if current_company %}&company={{ current_company }}{% endif %}"
+           class="px-3 py-1 rounded-full text-sm {% if current_stage == code %}bg-red-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %} transition">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="flex items-center space-x-2">
+        <span class="text-gray-400 text-sm">Sort:</span>
+        <a href="{% url 'rants:wall_of_shame' %}?{% if current_stage %}stage={{ current_stage }}&{% endif %}{% if current_company %}company={{ current_company }}&{% endif %}sort=recent"
+           class="px-3 py-1 rounded text-sm {% if current_sort == 'recent' %}text-red-400{% else %}text-gray-400 hover:text-gray-200{% endif %}">
+            Recent
+        </a>
+        <a href="{% url 'rants:wall_of_shame' %}?{% if current_stage %}stage={{ current_stage }}&{% endif %}{% if current_company %}company={{ current_company }}&{% endif %}sort=reactions"
+           class="px-3 py-1 rounded text-sm {% if current_sort == 'reactions' %}text-red-400{% else %}text-gray-400 hover:text-gray-200{% endif %}">
+            Most Reacted
+        </a>
+    </div>
+</div>
+
+<!-- Company search -->
+<form method="get" class="mb-8">
+    <div class="flex gap-2">
+        <input type="text" name="company" value="{{ current_company }}" placeholder="Search by company name..."
+               class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500">
+        {% if current_stage %}<input type="hidden" name="stage" value="{{ current_stage }}">{% endif %}
+        {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+        <button type="submit" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition">
+            Search
+        </button>
+        {% if current_company %}
+        <a href="{% url 'rants:wall_of_shame' %}?{% if current_stage %}stage={{ current_stage }}&{% endif %}sort={{ current_sort }}"
+           class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg transition">
+            Clear
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Stories list -->
+{% if stories %}
+<div class="space-y-6">
+    {% for story in stories %}
+    <article class="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition border-l-4 border-red-500">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-xl font-bold text-white mb-1">
+                    <a href="{{ story.get_absolute_url }}" class="hover:text-red-400 transition">
+                        {{ story.company }}
+                    </a>
+                </h2>
+                <div class="flex items-center space-x-3 text-sm text-gray-400">
+                    {% if story.recruiter_name %}
+                    <span>Recruiter: {{ story.recruiter_name }}</span>
+                    <span class="text-gray-600">|</span>
+                    {% endif %}
+                    <span>{{ story.get_platform_display }}</span>
+                    <span class="text-gray-600">|</span>
+                    <span class="text-red-400">{{ story.get_stage_display }}</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-gray-500">{{ story.created_at|timesince }} ago</span>
+                {% if story.is_featured %}
+                <span class="block mt-1 bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">
+                    Featured
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Story preview -->
+        <div class="prose text-gray-300 mb-4">
+            <a href="{{ story.get_absolute_url }}" class="hover:text-gray-100 transition">
+                {{ story.story|truncatewords:60 }}
+            </a>
+        </div>
+
+        <!-- Reactions -->
+        <div id="reactions-ghosting-{{ story.pk }}" class="flex items-center justify-between">
+            {% include 'rants/partials/reaction_buttons.html' with content=story content_type='ghosting' reaction_counts=story.get_reaction_counts %}
+
+            <a href="{{ story.get_absolute_url }}" class="text-sm text-gray-500 hover:text-gray-300 transition">
+                Read full story &#x2192;
+            </a>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="flex justify-center mt-8 space-x-2">
+    {% if page_obj.has_previous %}
+    <a href="?{% if current_stage %}stage={{ current_stage }}&{% endif %}{% if current_company %}company={{ current_company }}&{% endif %}sort={{ current_sort }}&page={{ page_obj.previous_page_number }}"
+       class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+        Previous
+    </a>
+    {% endif %}
+
+    <span class="px-4 py-2 text-gray-400">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a href="?{% if current_stage %}stage={{ current_stage }}&{% endif %}{% if current_company %}company={{ current_company }}&{% endif %}sort={{ current_sort }}&page={{ page_obj.next_page_number }}"
+       class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+        Next
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-12">
+    <p class="text-gray-400 text-lg mb-4">No stories yet. Be the first to name and shame!</p>
+    <a href="{% url 'rants:ghosting_create' %}" class="text-red-400 hover:text-red-300">
+        Add to the Wall of Shame &#x2192;
+    </a>
+</div>
+{% endif %}
+{% endblock %}

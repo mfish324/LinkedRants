@@ -1,5 +1,5 @@
 from django import forms
-from .models import Rant, SideBySide, Category
+from .models import Rant, SideBySide, GhostingStory, Category
 
 
 class RantForm(forms.ModelForm):
@@ -93,6 +93,66 @@ class SideBySideForm(forms.ModelForm):
             'context': 'Context',
             'linkedin_version': 'The LinkedIn Version',
             'reality_version': 'The Reality',
+            'is_anonymous': 'Post anonymously',
+            'display_name': 'Display name',
+            'email': 'Email (optional)',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_anonymous = cleaned_data.get('is_anonymous')
+        display_name = cleaned_data.get('display_name')
+
+        if not is_anonymous and not display_name:
+            cleaned_data['is_anonymous'] = True
+
+        return cleaned_data
+
+
+class GhostingStoryForm(forms.ModelForm):
+    """Form for submitting a ghosting story to the Wall of Shame."""
+
+    class Meta:
+        model = GhostingStory
+        fields = ['company', 'recruiter_name', 'platform', 'stage', 'story', 'is_anonymous', 'display_name', 'email']
+        widgets = {
+            'company': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Company name',
+            }),
+            'recruiter_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Recruiter name (optional)',
+            }),
+            'platform': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'stage': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'story': forms.Textarea(attrs={
+                'class': 'form-textarea',
+                'placeholder': 'What happened? How did they ghost you? (Markdown supported)',
+                'rows': 6,
+            }),
+            'is_anonymous': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox',
+            }),
+            'display_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Your name (only shown if not anonymous)',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Optional - for notifications if featured',
+            }),
+        }
+        labels = {
+            'company': 'Company',
+            'recruiter_name': 'Recruiter Name (optional)',
+            'platform': 'Where did they contact you?',
+            'stage': 'How far in the process?',
+            'story': 'Your Story',
             'is_anonymous': 'Post anonymously',
             'display_name': 'Display name',
             'email': 'Email (optional)',

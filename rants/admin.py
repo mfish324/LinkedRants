@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Rant, SideBySide, Reaction
+from .models import Category, Rant, SideBySide, GhostingStory, Reaction
 
 
 @admin.register(Category)
@@ -40,8 +40,30 @@ class SideBySideAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
+@admin.register(GhostingStory)
+class GhostingStoryAdmin(admin.ModelAdmin):
+    list_display = ['company', 'recruiter_name', 'platform', 'stage', 'is_approved', 'is_featured', 'created_at']
+    list_filter = ['platform', 'stage', 'is_approved', 'is_featured', 'is_reported', 'created_at']
+    search_fields = ['company', 'recruiter_name', 'story', 'display_name']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+    actions = ['approve_stories', 'feature_stories', 'unflag_stories']
+
+    @admin.action(description="Approve selected stories")
+    def approve_stories(self, request, queryset):
+        queryset.update(is_approved=True)
+
+    @admin.action(description="Feature selected stories")
+    def feature_stories(self, request, queryset):
+        queryset.update(is_featured=True)
+
+    @admin.action(description="Clear reports on selected stories")
+    def unflag_stories(self, request, queryset):
+        queryset.update(is_reported=False, report_count=0)
+
+
 @admin.register(Reaction)
 class ReactionAdmin(admin.ModelAdmin):
-    list_display = ['reaction_type', 'rant', 'sidebyside', 'created_at']
+    list_display = ['reaction_type', 'rant', 'sidebyside', 'ghosting_story', 'created_at']
     list_filter = ['reaction_type', 'created_at']
     readonly_fields = ['created_at']

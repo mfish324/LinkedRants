@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ story.company }} - Wall of Shame{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Back link -->
+    <a href="{% url 'rants:wall_of_shame' %}" class="text-gray-400 hover:text-gray-200 mb-6 inline-flex items-center space-x-2">
+        <span>&#x2190;</span>
+        <span>Back to Wall of Shame</span>
+    </a>
+
+    <article class="bg-gray-800 rounded-lg p-8 mt-4 border-l-4 border-red-500">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">{{ story.company }}</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+                {% if story.recruiter_name %}
+                <span class="bg-gray-700 px-3 py-1 rounded-full">
+                    Recruiter: {{ story.recruiter_name }}
+                </span>
+                {% endif %}
+                <span class="bg-gray-700 px-3 py-1 rounded-full">
+                    {{ story.get_platform_display }}
+                </span>
+                <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full">
+                    {{ story.get_stage_display }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Meta info -->
+        <div class="flex items-center justify-between text-sm text-gray-500 mb-6 pb-6 border-b border-gray-700">
+            <span>{{ story.created_at|timesince }} ago</span>
+            {% if not story.is_anonymous %}
+            <span>by {{ story.author_display }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Story content -->
+        <div class="prose prose-invert prose-lg max-w-none mb-8">
+            {{ story.story_html|safe }}
+        </div>
+
+        <!-- Reactions -->
+        <div id="reactions-ghosting-{{ story.pk }}" class="border-t border-gray-700 pt-6">
+            {% include 'rants/partials/reaction_buttons.html' with content=story content_type='ghosting' reaction_counts=story.get_reaction_counts user_reactions=user_reactions %}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
+            <button hx-post="{% url 'rants:report' content_type='ghosting' pk=story.pk %}"
+                    hx-swap="outerHTML"
+                    class="text-gray-500 hover:text-red-400 text-sm transition">
+                Report
+            </button>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Copied!';"
+                        class="text-gray-400 hover:text-gray-200 text-sm transition">
+                    Copy link
+                </button>
+            </div>
+        </div>
+    </article>
+
+    <!-- Submit CTA -->
+    <div class="mt-8 text-center">
+        <p class="text-gray-400 mb-4">Got your own ghosting story?</p>
+        <a href="{% url 'rants:ghosting_create' %}"
+           class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition inline-block">
+            Add to the Wall of Shame
+        </a>
+    </div>
+</div>
+{% endblock %}
