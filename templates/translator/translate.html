@@ -39,7 +39,7 @@
     </div>
 
     <!-- Translator form - side by side -->
-    <form method="post" id="translator-form">
+    <form method="post" id="translator-form" onsubmit="showLoading()">
         {% csrf_token %}
         <input type="hidden" name="mode" id="mode-input" value="to_linkedin">
 
@@ -60,6 +60,7 @@
             <!-- Middle: Translate button -->
             <div class="flex items-center">
                 <button type="submit"
+                        id="translate-btn"
                         class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-4 rounded-lg font-semibold transition flex flex-col items-center gap-2">
                     <span class="text-2xl">&#x2192;</span>
                     <span>Translate</span>
@@ -68,11 +69,29 @@
 
             <!-- Right side: Output -->
             <div class="flex-1">
-                <label id="output-label" class="block text-sm font-medium text-primary-400 mb-2">
-                    The LinkedIn version:
-                </label>
-                <div id="output-text"
-                     class="form-textarea h-64 overflow-y-auto whitespace-pre-wrap {% if translated_text and 'Translation failed' not in translated_text %}bg-primary-900/20 border-primary-800{% endif %}">{% if translated_text %}{{ translated_text }}{% else %}<span class="text-gray-500 italic">Translation will appear here...</span>{% endif %}</div>
+                <div class="flex justify-between items-center mb-2">
+                    <label id="output-label" class="block text-sm font-medium text-primary-400">
+                        The LinkedIn version:
+                    </label>
+                    {% if powered_by %}
+                    <span class="text-xs text-gray-500">Powered by {{ powered_by }}</span>
+                    {% endif %}
+                </div>
+                <div id="output-container" class="relative">
+                    <div id="output-text"
+                         class="form-textarea h-64 overflow-y-auto whitespace-pre-wrap {% if translated_text and 'Translation failed' not in translated_text %}bg-primary-900/20 border-primary-800{% endif %}">{% if translated_text %}{{ translated_text }}{% else %}<span class="text-gray-500 italic">Translation will appear here...</span>{% endif %}</div>
+
+                    <!-- Loading Spinner (hidden by default) -->
+                    <div id="loading-spinner" class="hidden absolute inset-0 bg-gray-900/90 rounded-lg flex flex-col items-center justify-center">
+                        <div class="relative">
+                            <div class="w-16 h-16 border-4 border-gray-700 border-t-accent-500 rounded-full animate-spin"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl">&#x1F4BC;</span>
+                            </div>
+                        </div>
+                        <p id="loading-message" class="mt-6 text-gray-400 text-center text-sm italic max-w-xs transition-opacity duration-200"></p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -116,6 +135,102 @@
 </div>
 
 <script>
+// Funny loading messages
+const LOADING_MESSAGES = [
+    // Workplace waiting
+    "Kinda like waiting for that raise, isn't it?",
+    "Spinning wheel, just like that hamster wheel you're on at work.",
+    "Still faster than HR getting back to you.",
+    "Loading... like your motivation on Monday morning.",
+    "Please hold, your translation is very important to us.",
+    "Buffering... unlike your manager's promises.",
+    "Almost there, unlike your career progression.",
+    "Processing... faster than your expense reimbursement.",
+
+    // Job search waiting
+    "Waiting... just like after that 'great' interview.",
+    "Any moment now... unlike that job application response.",
+    "Still quicker than a recruiter follow-up.",
+    "Loading faster than LinkedIn loads ghost jobs.",
+    "Hang tight, unlike your last employer.",
+    "Working on it... unlike that 'urgent' hire.",
+
+    // LinkedIn specific
+    "Translating corporate speak... please wait.",
+    "Converting authenticity to buzzwords...",
+    "Injecting gratitude and humility...",
+    "Adding unnecessary line breaks...",
+    "Calculating optimal emoji placement...",
+    "Generating thought leadership...",
+    "Optimizing for engagement...",
+    "Removing all traces of personality...",
+    "Making it about the journey...",
+
+    // Corporate jargon
+    "Synergizing your content...",
+    "Leveraging AI to maximize cringe...",
+    "Disrupting your authentic thoughts...",
+    "Pivoting your message to stakeholders...",
+    "Taking this offline to process...",
+    "Let's circle back in a moment...",
+    "Putting this in the parking lot briefly...",
+    "Moving the needle...",
+    "Boiling the ocean...",
+
+    // Existential
+    "This is fine. Everything is fine.",
+    "Contemplating the void... and your career choices.",
+    "Finding meaning in corporate platitudes...",
+];
+
+let messageInterval = null;
+
+function getRandomMessage(exclude = null) {
+    let message;
+    do {
+        message = LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+    } while (message === exclude && LOADING_MESSAGES.length > 1);
+    return message;
+}
+
+function showLoading() {
+    const spinner = document.getElementById('loading-spinner');
+    const messageEl = document.getElementById('loading-message');
+    const translateBtn = document.getElementById('translate-btn');
+
+    // Show spinner
+    spinner.classList.remove('hidden');
+    translateBtn.disabled = true;
+    translateBtn.querySelector('span:last-child').textContent = 'Working...';
+
+    // Set initial message
+    messageEl.textContent = getRandomMessage();
+    messageEl.style.opacity = '1';
+
+    // Rotate messages every 2.5 seconds
+    messageInterval = setInterval(() => {
+        messageEl.style.opacity = '0';
+        setTimeout(() => {
+            messageEl.textContent = getRandomMessage(messageEl.textContent);
+            messageEl.style.opacity = '1';
+        }, 200);
+    }, 2500);
+}
+
+function hideLoading() {
+    const spinner = document.getElementById('loading-spinner');
+    const translateBtn = document.getElementById('translate-btn');
+
+    spinner.classList.add('hidden');
+    translateBtn.disabled = false;
+    translateBtn.querySelector('span:last-child').textContent = 'Translate';
+
+    if (messageInterval) {
+        clearInterval(messageInterval);
+        messageInterval = null;
+    }
+}
+
 function setMode(mode) {
     document.getElementById('mode-input').value = mode;
 
@@ -143,6 +258,13 @@ function setMode(mode) {
 // Set initial mode from server if provided
 {% if mode == 'to_reality' %}
 setMode('to_reality');
+{% endif %}
+
+// Hide loading if page loaded with results (form was submitted)
+{% if translated_text %}
+// Page has results, no need for spinner
+{% else %}
+// Fresh page, spinner will show on submit
 {% endif %}
 </script>
 {% endblock %}

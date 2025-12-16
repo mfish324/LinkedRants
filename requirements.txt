@@ -1,7 +1,6 @@
 Django>=4.2,<5.0
 djangorestframework>=3.14.0
 django-htmx>=1.17.0
-anthropic>=0.18.0
 python-dotenv>=1.0.0
 markdown>=3.5.0
 bleach>=6.1.0
@@ -10,3 +9,9 @@ gunicorn>=21.0.0
 psycopg2-binary>=2.9.9
 whitenoise>=6.6.0
 dj-database-url>=2.1.0
+
+# AI Providers (add API keys to enable)
+anthropic>=0.18.0
+openai>=1.12.0
+google-generativeai>=0.4.0
+groq>=0.4.0
