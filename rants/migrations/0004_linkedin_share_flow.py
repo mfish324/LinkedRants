@@ -4,6 +4,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 import secrets
+import rants.models
 
 
 def generate_share_slugs(apps, schema_editor):
@@ -119,12 +120,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="rant",
             name="share_slug",
-            field=models.SlugField(unique=True, max_length=12, default=secrets.token_urlsafe),
+            field=models.SlugField(unique=True, max_length=12, default=rants.models.generate_share_slug),
         ),
         # Step 7: Alter SideBySide.share_slug to be unique with default
         migrations.AlterField(
             model_name="sidebyside",
             name="share_slug",
-            field=models.SlugField(unique=True, max_length=12, default=secrets.token_urlsafe),
+            field=models.SlugField(unique=True, max_length=12, default=rants.models.generate_share_slug),
         ),
     ]
