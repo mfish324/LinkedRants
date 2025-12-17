@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Rant, SideBySide, GhostingStory, Reaction
+from .models import Category, Rant, SideBySide, GhostingStory, Reaction, ContentView
 
 
 @admin.register(Category)
@@ -11,10 +11,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Rant)
 class RantAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'is_anonymous', 'is_approved', 'is_featured', 'created_at']
+    list_display = ['title', 'share_slug', 'category', 'is_anonymous', 'is_approved', 'is_featured', 'created_at']
     list_filter = ['category', 'is_approved', 'is_featured', 'is_reported', 'created_at']
-    search_fields = ['title', 'body', 'display_name']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+    search_fields = ['title', 'body', 'display_name', 'share_slug']
+    readonly_fields = ['id', 'share_slug', 'created_at', 'updated_at']
     date_hierarchy = 'created_at'
     actions = ['approve_rants', 'feature_rants', 'unflag_rants']
 
@@ -33,10 +33,10 @@ class RantAdmin(admin.ModelAdmin):
 
 @admin.register(SideBySide)
 class SideBySideAdmin(admin.ModelAdmin):
-    list_display = ['context', 'is_anonymous', 'is_approved', 'is_featured', 'created_at']
+    list_display = ['context', 'share_slug', 'is_anonymous', 'is_approved', 'is_featured', 'created_at']
     list_filter = ['is_approved', 'is_featured', 'is_reported', 'created_at']
-    search_fields = ['context', 'linkedin_version', 'reality_version', 'display_name']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+    search_fields = ['context', 'linkedin_version', 'reality_version', 'display_name', 'share_slug']
+    readonly_fields = ['id', 'share_slug', 'created_at', 'updated_at']
     date_hierarchy = 'created_at'
 
 
@@ -67,3 +67,21 @@ class ReactionAdmin(admin.ModelAdmin):
     list_display = ['reaction_type', 'rant', 'sidebyside', 'ghosting_story', 'created_at']
     list_filter = ['reaction_type', 'created_at']
     readonly_fields = ['created_at']
+
+
+@admin.register(ContentView)
+class ContentViewAdmin(admin.ModelAdmin):
+    list_display = ['get_content', 'referrer', 'timestamp']
+    list_filter = ['referrer', 'timestamp']
+    readonly_fields = ['rant', 'sidebyside', 'ghosting_story', 'referrer', 'timestamp']
+    date_hierarchy = 'timestamp'
+
+    def get_content(self, obj):
+        if obj.rant:
+            return f"Rant: {obj.rant.share_slug}"
+        elif obj.sidebyside:
+            return f"SideBySide: {obj.sidebyside.share_slug}"
+        elif obj.ghosting_story:
+            return f"Ghosting: {obj.ghosting_story.company}"
+        return "Unknown"
+    get_content.short_description = 'Content'

@@ -6,6 +6,17 @@
     <title>{% block title %}LinkedRants{% endblock %} | The Anti-LinkedIn</title>
     <meta name="description" content="{% block meta_description %}Say what you actually think. No personal branding required.{% endblock %}">
 
+    <!-- Default Open Graph / Social Preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{% block og_title %}LinkedRants - The Anti-LinkedIn{% endblock %}" />
+    <meta property="og:description" content="Say what you actually think. No personal branding required." />
+    <meta property="og:site_name" content="LinkedRants" />
+
+    <!-- Twitter Card defaults -->
+    <meta name="twitter:card" content="summary" />
+
+    {% block extra_head %}{% endblock %}
+
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}The Real Version | LinkedRants{% endblock %}
+
+{% block meta_description %}{{ rant.body|truncatewords:30 }}{% endblock %}
+
+{% block extra_head %}
+<!-- Open Graph / Social Preview -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content="The Real Version" />
+<meta property="og:description" content="{{ rant.body|truncatewords:30 }}" />
+<meta property="og:url" content="{{ request.build_absolute_uri }}" />
+<meta property="og:site_name" content="LinkedRants" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="The Real Version" />
+<meta name="twitter:description" content="{{ rant.body|truncatewords:30 }}" />
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Header badge -->
+    <div class="text-center mb-6">
+        <span class="inline-block bg-accent-500/20 text-accent-400 text-sm font-medium px-4 py-2 rounded-full">
+            THE REAL VERSION
+        </span>
+    </div>
+
+    <!-- Main content card -->
+    <article class="bg-gray-800 rounded-lg p-8 mb-8">
+        {% if rant.title %}
+        <h1 class="text-2xl font-bold text-white mb-4">{{ rant.title }}</h1>
+        {% endif %}
+
+        <!-- The real version (prominent) -->
+        <div class="prose prose-invert prose-lg max-w-none mb-6">
+            {{ rant.body_html|safe }}
+        </div>
+
+        <!-- Meta -->
+        <div class="flex items-center justify-between text-sm text-gray-500 mb-6 pt-4 border-t border-gray-700">
+            <div class="flex items-center gap-4">
+                <span>{{ rant.category.icon }} {{ rant.category.name }}</span>
+                <span>{{ rant.created_at|timesince }} ago</span>
+            </div>
+            {% if not rant.is_anonymous %}
+            <span>by {{ rant.author_display }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Reactions -->
+        <div id="reactions-rant-{{ rant.pk }}" class="border-t border-gray-700 pt-6">
+            {% include 'rants/partials/reaction_buttons.html' with content=rant content_type='rant' reaction_counts=rant.get_reaction_counts user_reactions=user_reactions %}
+        </div>
+    </article>
+
+    <!-- LinkedIn version (if exists) -->
+    {% if rant.linkedin_version %}
+    <div class="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-700">
+        <h3 class="text-sm font-medium text-gray-400 mb-3">The LinkedIn Version:</h3>
+        <div class="text-gray-400 italic whitespace-pre-wrap">
+            "{{ rant.linkedin_version }}"
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Share your own CTA -->
+    <div class="bg-gradient-to-r from-primary-900/50 to-accent-900/50 rounded-lg p-8 text-center mb-8">
+        <h2 class="text-2xl font-bold text-white mb-3">Got your own story?</h2>
+        <p class="text-gray-400 mb-6">Share what you actually think. No personal branding required.</p>
+        <a href="{% url 'rants:create' %}"
+           class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-lg font-semibold transition inline-block">
+            Share Your Real Story
+        </a>
+    </div>
+
+    <!-- Related rants -->
+    {% if related_rants %}
+    <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-300 mb-4">More real stories:</h3>
+        <div class="space-y-4">
+            {% for related in related_rants %}
+            <a href="{{ related.get_share_url }}"
+               class="block bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition">
+                <p class="text-gray-300 line-clamp-2">{{ related.body|truncatewords:25 }}</p>
+                <div class="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                    <span>{{ related.total_reactions }} reactions</span>
+                    <span>&middot;</span>
+                    <span>{{ related.created_at|timesince }} ago</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Share buttons -->
+    <div class="flex items-center justify-center gap-4 py-6 border-t border-gray-800">
+        <span class="text-gray-500 text-sm">Share this:</span>
+        <button onclick="navigator.clipboard.writeText(window.location.href); this.textContent='Copied!';"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm transition">
+            Copy Link
+        </button>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}"
+           target="_blank"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm transition">
+            LinkedIn
+        </a>
+        <a href="https://twitter.com/intent/tweet?text=The%20real%20version&url={{ request.build_absolute_uri|urlencode }}"
+           target="_blank"
+           class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm transition">
+            X / Twitter
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -2,8 +2,14 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 import uuid
+import secrets
 import markdown
 import bleach
+
+
+def generate_share_slug():
+    """Generate a short, URL-safe slug for sharing."""
+    return secrets.token_urlsafe(6)[:8]
 
 
 class Category(models.Model):
@@ -28,8 +34,10 @@ class Category(models.Model):
 class Rant(models.Model):
     """Main rant/post submission."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    share_slug = models.SlugField(unique=True, max_length=12, default=generate_share_slug)
     title = models.CharField(max_length=200, blank=True)
     body = models.TextField()
+    linkedin_version = models.TextField(blank=True, help_text="Optional: The LinkedIn version for sharing")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='rants')
     is_anonymous = models.BooleanField(default=True)
     display_name = models.CharField(max_length=100, blank=True)
@@ -49,6 +57,10 @@ class Rant(models.Model):
 
     def get_absolute_url(self):
         return reverse('rants:detail', kwargs={'pk': self.id})
+
+    def get_share_url(self):
+        """Get the shareable /real/ URL."""
+        return reverse('rants:real', kwargs={'slug': self.share_slug})
 
     @property
     def author_display(self):
@@ -82,6 +94,7 @@ class Rant(models.Model):
 class SideBySide(models.Model):
     """LinkedIn vs Reality comparison submission."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    share_slug = models.SlugField(unique=True, max_length=12, default=generate_share_slug)
     linkedin_version = models.TextField(help_text="The LinkedIn version (cringe)")
     reality_version = models.TextField(help_text="The reality (what actually happened)")
     context = models.CharField(max_length=200, blank=True, help_text="Brief setup/context")
@@ -105,6 +118,10 @@ class SideBySide(models.Model):
 
     def get_absolute_url(self):
         return reverse('rants:sidebyside_detail', kwargs={'pk': self.id})
+
+    def get_share_url(self):
+        """Get the shareable /vs/ URL."""
+        return reverse('rants:vs', kwargs={'slug': self.share_slug})
 
     @property
     def author_display(self):
@@ -262,3 +279,36 @@ class Reaction(models.Model):
     @classmethod
     def get_label(cls, code):
         return cls.REACTION_LABELS.get(code, '')
+
+
+class ContentView(models.Model):
+    """Track views and referral sources for content."""
+    REFERRER_CHOICES = [
+        ('li', 'LinkedIn'),
+        ('tw', 'Twitter/X'),
+        ('fb', 'Facebook'),
+        ('direct', 'Direct'),
+        ('other', 'Other'),
+    ]
+
+    rant = models.ForeignKey(
+        Rant, on_delete=models.CASCADE,
+        related_name='content_views', null=True, blank=True
+    )
+    sidebyside = models.ForeignKey(
+        SideBySide, on_delete=models.CASCADE,
+        related_name='content_views', null=True, blank=True
+    )
+    ghosting_story = models.ForeignKey(
+        GhostingStory, on_delete=models.CASCADE,
+        related_name='content_views', null=True, blank=True
+    )
+    referrer = models.CharField(max_length=20, choices=REFERRER_CHOICES, default='direct')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        content = self.rant or self.sidebyside or self.ghosting_story
+        return f"View from {self.get_referrer_display()} on {content}"

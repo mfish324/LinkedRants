@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Rant is Live!{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Success header -->
+    <div class="text-center mb-8">
+        <div class="text-6xl mb-4">&#x2714;</div>
+        <h1 class="text-3xl font-bold text-white mb-2">Your rant is live!</h1>
+        <p class="text-gray-400">Now let's use LinkedIn against itself.</p>
+    </div>
+
+    <!-- Share section -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-accent-400 mb-4">Share the irony on LinkedIn</h2>
+        <p class="text-gray-400 mb-6">
+            Post the polished version on LinkedIn, then let people read what you actually meant.
+        </p>
+
+        <!-- Share URL -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Your "real version" link:</label>
+            <div class="flex gap-2">
+                <input type="text" value="{{ share_url }}" readonly
+                       id="share-url"
+                       class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white font-mono text-sm">
+                <button onclick="copyToClipboard('share-url', this)"
+                        class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition">
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <!-- LinkedIn version (if exists) or AI generate option -->
+        {% if rant.linkedin_version %}
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Your LinkedIn version:</label>
+            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-2">
+                <p class="text-gray-200 whitespace-pre-wrap">{{ rant.linkedin_version }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Suggested caption -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Suggested LinkedIn caption:</label>
+            <div class="space-y-2">
+                {% for teaser in teaser_options %}
+                <div class="flex gap-2 items-center">
+                    <input type="radio" name="teaser" id="teaser-{{ forloop.counter }}" value="{{ teaser }}"
+                           class="text-accent-500" {% if forloop.first %}checked{% endif %}
+                           onchange="updateSelectedTeaser(this.value)">
+                    <label for="teaser-{{ forloop.counter }}" class="text-gray-300 text-sm cursor-pointer flex-1">
+                        {{ teaser }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Full post preview -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Full post to copy:</label>
+            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 relative">
+                <textarea id="full-post" readonly rows="6"
+                          class="w-full bg-transparent text-gray-200 resize-none focus:outline-none">{% if rant.linkedin_version %}{{ rant.linkedin_version }}
+
+{% endif %}What I actually meant: {{ share_url }}</textarea>
+                <button onclick="copyToClipboard('full-post', this)"
+                        class="absolute top-2 right-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition">
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex flex-wrap gap-3">
+            <button onclick="copyToClipboard('share-url', this)"
+                    class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                Copy Link Only
+            </button>
+            <button onclick="copyToClipboard('full-post', this)"
+                    class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                Copy Full Post
+            </button>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode }}"
+               target="_blank"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition inline-flex items-center gap-2">
+                <span>Share on LinkedIn</span>
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=The%20real%20version&url={{ share_url|urlencode }}"
+               target="_blank"
+               class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                Share on X
+            </a>
+        </div>
+    </div>
+
+    <!-- Preview of rant -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-6">
+        <h3 class="text-sm font-medium text-gray-400 mb-3">Your rant preview:</h3>
+        <div class="prose text-gray-300">
+            {{ rant.body|truncatewords:50 }}
+        </div>
+        <a href="{{ rant.get_share_url }}" class="text-primary-400 hover:text-primary-300 text-sm mt-4 inline-block">
+            View full rant &#x2192;
+        </a>
+    </div>
+
+    <!-- Done button -->
+    <div class="text-center">
+        <a href="{% url 'rants:home' %}" class="text-gray-400 hover:text-gray-200">
+            &#x2190; Back to home
+        </a>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(elementId, button) {
+    const element = document.getElementById(elementId);
+    const text = element.value || element.textContent;
+    navigator.clipboard.writeText(text);
+
+    const originalText = button.textContent;
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
+}
+
+function updateSelectedTeaser(teaser) {
+    const fullPost = document.getElementById('full-post');
+    const linkedinVersion = `{{ rant.linkedin_version|escapejs }}`;
+
+    if (linkedinVersion) {
+        fullPost.value = linkedinVersion + '\n\n' + teaser;
+    } else {
+        fullPost.value = teaser;
+    }
+}
+</script>
+{% endblock %}

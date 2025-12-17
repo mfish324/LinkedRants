@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.urls import reverse_lazy
 
-from .models import Category, Rant, SideBySide, GhostingStory, Reaction
+from .models import Category, Rant, SideBySide, GhostingStory, Reaction, ContentView
 from .forms import RantForm, SideBySideForm, GhostingStoryForm, ReportForm
 
 
@@ -102,20 +102,140 @@ class SideBySideDetailView(DetailView):
         return context
 
 
+class RantShareView(DetailView):
+    """Shareable view for rants - /real/{slug}/ URL for LinkedIn sharing."""
+    model = Rant
+    template_name = 'rants/rant_share.html'
+    context_object_name = 'rant'
+    slug_field = 'share_slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        return Rant.objects.filter(is_approved=True)
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+
+        # Track the view with referrer
+        ref = request.GET.get('ref', 'direct')
+        if ref not in ['li', 'tw', 'fb']:
+            ref = 'direct' if ref == 'direct' else 'other'
+
+        ContentView.objects.create(
+            rant=self.object,
+            referrer=ref
+        )
+
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['reaction_types'] = Reaction.REACTION_TYPES
+        context['reaction_labels'] = Reaction.REACTION_LABELS
+        context['is_share_page'] = True
+        context['related_rants'] = Rant.objects.filter(
+            is_approved=True,
+            category=self.object.category
+        ).exclude(pk=self.object.pk)[:3]
+
+        session_key = self.request.session.session_key
+        if session_key:
+            context['user_reactions'] = list(
+                Reaction.objects.filter(
+                    rant=self.object,
+                    session_key=session_key
+                ).values_list('reaction_type', flat=True)
+            )
+        else:
+            context['user_reactions'] = []
+        return context
+
+
+class SideBySideShareView(DetailView):
+    """Shareable view for side-by-sides - /vs/{slug}/ URL for LinkedIn sharing."""
+    model = SideBySide
+    template_name = 'rants/sidebyside_share.html'
+    context_object_name = 'sidebyside'
+    slug_field = 'share_slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        return SideBySide.objects.filter(is_approved=True)
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+
+        # Track the view with referrer
+        ref = request.GET.get('ref', 'direct')
+        if ref not in ['li', 'tw', 'fb']:
+            ref = 'direct' if ref == 'direct' else 'other'
+
+        ContentView.objects.create(
+            sidebyside=self.object,
+            referrer=ref
+        )
+
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['reaction_types'] = Reaction.REACTION_TYPES
+        context['reaction_labels'] = Reaction.REACTION_LABELS
+        context['is_share_page'] = True
+
+        session_key = self.request.session.session_key
+        if session_key:
+            context['user_reactions'] = list(
+                Reaction.objects.filter(
+                    sidebyside=self.object,
+                    session_key=session_key
+                ).values_list('reaction_type', flat=True)
+            )
+        else:
+            context['user_reactions'] = []
+        return context
+
+
 class RantCreateView(CreateView):
     """Create a new rant."""
     model = Rant
     form_class = RantForm
     template_name = 'rants/rant_form.html'
-    success_url = reverse_lazy('rants:home')
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Your rant has been posted!')
-        return super().form_valid(form)
+    def get_success_url(self):
+        # Redirect to the share success page
+        return reverse_lazy('rants:submit_success', kwargs={'slug': self.object.share_slug})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form_title'] = 'Submit a Rant'
+        return context
+
+
+class RantSubmitSuccessView(DetailView):
+    """Success page after submitting a rant with share options."""
+    model = Rant
+    template_name = 'rants/submit_success.html'
+    context_object_name = 'rant'
+    slug_field = 'share_slug'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Build full share URL
+        share_url = self.request.build_absolute_uri(
+            self.object.get_share_url()
+        ) + '?ref=li'
+        context['share_url'] = share_url
+
+        # Teaser options
+        context['teaser_options'] = [
+            f"What I actually meant: {share_url}",
+            f"The real story: {share_url}",
+            f"Reality check: {share_url}",
+            f"Behind the LinkedIn: {share_url}",
+            f"Translation: {share_url}",
+        ]
         return context
 
 

@@ -11,6 +11,11 @@ urlpatterns = [
     # Rant views
     path('rant/<uuid:pk>/', views.RantDetailView.as_view(), name='detail'),
     path('submit/', views.RantCreateView.as_view(), name='create'),
+    path('submit/success/<slug:slug>/', views.RantSubmitSuccessView.as_view(), name='submit_success'),
+
+    # Shareable URLs (for LinkedIn sharing)
+    path('real/<slug:slug>/', views.RantShareView.as_view(), name='real'),
+    path('vs/<slug:slug>/', views.SideBySideShareView.as_view(), name='vs'),
 
     # Side-by-side views
     path('sidebyside/<uuid:pk>/', views.SideBySideDetailView.as_view(), name='sidebyside_detail'),
