@@ -193,11 +193,74 @@
             <div class="text-center mt-4 text-gray-600 text-xs">
                 Made with frustration
             </div>
-            <div class="text-center mt-3 text-gray-600 text-xs">
+            <div class="text-center mt-3 text-gray-600 text-xs transition-opacity duration-300" id="rotating-disclaimer">
                 LinkedInRants is not affiliated with LinkedIn or Microsoft. We just think their platform has become insufferable.
             </div>
         </div>
     </footer>
+
+    <script>
+    (function() {
+        const disclaimers = [
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We just think their platform has become insufferable.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're just here to provide the therapy you need after reading another 'I'm humbled to announce' post.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the support group for people who've had enough of humble brags and thought leadership.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Consider us the digital equivalent of screaming into a pillow after your feed.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're what happens when people get tired of pretending every job is a dream opportunity.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're just tired of watching people congratulate themselves for showing up to work.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because sometimes you need to say 'circle back' without wanting to throw your laptop.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the place you go after reading one too many posts about 5am routines and hustle culture.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Think of us as the antidote to inspirational quote graphics with stock photos.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We exist because 'synergy' is not a real answer to anything.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. For everyone who's ever eye-rolled so hard at a post they saw their own brain.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the alternative for people who peaked in high school and aren't afraid to admit it.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'agree?' at the end of an obvious statement deserves a safe space to mock it.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're here for everyone who's been gaslit by a 'rockstar ninja guru' job posting.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'let that sink in' makes us want to let our sanity out.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the safe space for people tired of being someone's 'greatest asset.'",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. For everyone who knows that 'wearing many hats' just means you're underpaid.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We exist because 'I don't have all the answers' followed by 500 words proves you think you do.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're what you need after seeing another CEO's fake 'vulnerability' post go viral.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'thoughts?' under a 3000-word manifesto isn't really a question.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're here because calling yourself a 'change-maker' doesn't make you one.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. For people who remember when a job was just a job, not a 'journey.'",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the reality check for everyone claiming to 'disrupt' staplers or whatever.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'I'm hiring!' with 47 unpaid requirements deserves public shaming.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We exist for people who cringe at 'I'm blessed to announce my new role' posts.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the antidote to people who 'lead with empathy' but ghost all their applicants.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. For everyone tired of motivational posts from people born into wealth.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'culture fit' is usually code for 'we only hire people like us.'",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're here because 'passion' doesn't pay rent, Karen.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. For people who know 'unlimited PTO' means 'we'll guilt you for taking any.'",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We exist because another post about waking up at 4am might actually kill us.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. We're the support group for everyone who's ever been 'voluntold' to join a committee.",
+            "LinkedInRants is not affiliated with LinkedIn or Microsoft. Because 'we're like a family here' is never a good sign."
+        ];
+
+        function getRandomDisclaimer(current) {
+            let next;
+            do {
+                next = disclaimers[Math.floor(Math.random() * disclaimers.length)];
+            } while (next === current && disclaimers.length > 1);
+            return next;
+        }
+
+        const el = document.getElementById('rotating-disclaimer');
+        if (el) {
+            // Set random disclaimer on load
+            el.textContent = getRandomDisclaimer();
+
+            // Rotate every 8 seconds
+            setInterval(() => {
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.textContent = getRandomDisclaimer(el.textContent);
+                    el.style.opacity = '1';
+                }, 300);
+            }, 8000);
+        }
+    })();
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
