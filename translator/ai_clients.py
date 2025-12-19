@@ -69,14 +69,16 @@ def translate_openai(text: str, mode: str) -> str:
 
 def translate_google(text: str, mode: str) -> str:
     """Translate using Google Gemini."""
-    import google.generativeai as genai
+    from google import genai
 
     load_dotenv(override=True)
-    genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+    client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
     prompt = f"{SYSTEM_PROMPTS[mode]}\n\nText to translate:\n{text}"
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.0-flash',
+        contents=prompt
+    )
 
     return response.text.strip()
 
@@ -89,7 +91,7 @@ def translate_groq(text: str, mode: str) -> str:
     client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
     response = client.chat.completions.create(
-        model="llama-3.1-70b-versatile",
+        model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPTS[mode]},
             {"role": "user", "content": text}
