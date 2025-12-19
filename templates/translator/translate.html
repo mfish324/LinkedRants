@@ -207,14 +207,14 @@ function showLoading() {
     messageEl.textContent = getRandomMessage();
     messageEl.style.opacity = '1';
 
-    // Rotate messages every 2.5 seconds
+    // Rotate messages every 3 seconds
     messageInterval = setInterval(() => {
         messageEl.style.opacity = '0';
         setTimeout(() => {
             messageEl.textContent = getRandomMessage(messageEl.textContent);
             messageEl.style.opacity = '1';
         }, 200);
-    }, 2500);
+    }, 3000);
 }
 
 function hideLoading() {
